@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html>
+    <title>Homework 4</title>
+    <style>
+        h1 {text-align: center;margin-top: 100px; margin-bottom: 0}
+        form {text-align: center;}
+        input {height: 25px; width: 300px; margin-top: 20px}
+        #submitq {height: 30px; width: 120px; font-size: 15px; background-color: gainsboro; border-radius: 5px}
+    </style>
+    <body>
+        <script type="text/javascript">
+            function check(current){
+                var url = current.xml.value;
+                if(url == null || url == ""){
+		    alert("Enter an XML file name!");
+		}
+               else if(!(url.replace(/\s/g,"").length)){
+                    alert("Invalid input! Please enter a valid XML file name.");
+                }
+		else if(url != ""){
+                    parseXML(url);
+                }
+            }
+            
+            function parseXML(url){    
+                
+                var xmlhttp = new XMLHttpRequest();
+                
+             	try{
+               	    xmlhttp.open("GET",url,false);
+                    xmlhttp.send();
+                }
+                catch(e){
+                    alert("XML File does not exist!");
+                    return false;
+                } 
+                
+		if (xmlhttp.status==404){ alert("XML File does not exist!");}
+		                
+                else{
+                   var parser = new DOMParser();
+                   var xmlDoc = parser.parseFromString(xmlhttp.responseText,"text/xml");  
+			                
+                   var result = checkError(xmlDoc);
+                
+                   if (result == false){
+                       xmlDoc.onload = checkRows(xmlDoc);
+                   }
+            }}
+                        
+            function checkError(xmlDoc){
+                
+                if (xmlDoc.documentElement.nodeName == "parsererror") {
+                    alert("Error in parsing XML File!");
+                    return true;
+                }
+               else{   
+                    return false;
+              }
+            }
+            
+            function checkRows(xmlDoc){
+                    var row = xmlDoc.getElementsByTagName("Row");
+                    if (row.length == 0){
+                        alert("No newspaper entries in XML file!");
+                    }
+                else{
+                        generateHTML(xmlDoc);
+                    }
+                }
+            
+            
+            function generateHTML(xmlDoc){
+                
+                ELEMENT_NODE = 1;
+                
+                var heads = xmlDoc.getElementsByTagName("Data");
+                var table = "<html><head></head><body><table border='1' align='center'><tr>";
+                
+                for (i=0 ; i<heads.length; i++){
+                    
+                    if(heads.item(i).innerHTML == ""){
+                            table += "<th> </th>";
+                        }
+                    
+                    else if (heads[i].childNodes[0].nodeType != ELEMENT_NODE){      
+                   table += "<th>" + heads[i].childNodes[0].nodeValue + "</th>";      
+                }
+                }
+                
+                table += "</tr>";
+                
+                var rows = xmlDoc.getElementsByTagName("Row");
+                
+                    for(i=0; i<rows.length; i++){
+                         var vals = rows.item(i).childNodes;
+                            table += "<tr>";
+                            for(j=0;  j<vals.length; j++){
+                                
+                                if(vals.item(j).nodeType == ELEMENT_NODE){
+                                
+                                var nodes = vals.item(j).childNodes;
+                                if(nodes.length > 1){
+                                        var childs = vals.item(j).childNodes;
+                                        table += "<td><ul>";
+                                        for(k=0; k<childs.length; k++){
+                                            if(childs.item(k).nodeType == ELEMENT_NODE){
+                                                    
+                                                if(childs.item(k).childNodes.length > 0){
+                                                table += "<li>" + childs.item(k).childNodes[0].nodeValue + "</li>";
+                                                }
+                                                else{
+                                                  table += " "  
+                                                }
+                                                    
+                                            }
+                                        }
+                                    table += "</ul></td>"
+                                    
+                                }
+                                else if(j == vals.length - 4 && vals.item(j).childNodes.length > 0){
+                                    table += "<td>" + "<a href=" + vals.item(j).childNodes[0].nodeValue + ">" + vals.item(j).childNodes[0].nodeValue + "</a>";
+                                }
+                                else if(j == vals.length - 2 && vals.item(j).childNodes.length > 0){
+                                    
+                                    table += "<td>" + "<img src=" + vals.item(j).childNodes[0].nodeValue + " width=200 height=100></td>";
+                                    
+                                }
+                                
+                                else if(vals.item(j).childNodes.length > 0){
+                                    table += "<td>" + vals.item(j).childNodes[0].nodeValue + "</td>";
+                                }  
+                                else if(vals.item(j).childNodes.length == 0){
+                                    table += "<td> </td>";
+                                }
+                            }
+                            }
+                        table += "</tr>"; 
+                    }
+                           
+                
+                
+                
+                table += "</table></body></html>";
+                
+                var w = window.open("", "", "scrollbars=1, width=1000, height=600");
+                w.document.write(table);
+                
+            }
+            
+     
+        </script>
+        
+        <h1 style="">Enter URL for Newspaper List XML File</h1>
+        <form name="myform" method="GET" autocomplete="off">
+            <input type="text" name="xml" size="35"><br>
+            <input id="submitq" type="submit" value="Submit Query" onclick="check(this.form)" >
+        </form>
+	<noscript></noscript>
+    </body>
+</html>
